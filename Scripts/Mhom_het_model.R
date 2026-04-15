@@ -1,4 +1,5 @@
-library(bayesplot)##N=N*PN THE Mhom-het model
+#THE Mhom-het model#####
+library(bayesplot)
 library(cmdstanr)
 library(tidybayes)
 library(tidyverse)
@@ -11,6 +12,9 @@ library(magrittr)
 library(loo)
 library(posterior)
 library(writexl)
+library(stringr)
+library(purrr)
+
 
 rm(list = ls())
 set.seed(1275)
@@ -36,7 +40,7 @@ pN <- c(
 )
 
 ##read in
-df_N <- read.csv("Nigeria17.csv")
+df_N <- read.csv("./Data/Nigeria17.csv")
 
 populations <- c(
   Ondo = 4671695, Edo = 4235595, Osun = 4705589,
@@ -84,7 +88,7 @@ data_sir <- list(
 )
 
 #compile
-NCovid <- cmdstan_model("Mhom-het model.stan")# ##N=N*PN THE Mhom-het model
+NCovid <- cmdstan_model("./Scripts/Mhom_het_model.stan")
 
 iters <- 2000
 
@@ -92,10 +96,6 @@ stan_out <- NCovid$sample(data = data_sir,iter_warmup = iters, iter_sampling = i
 
 print(stan_out, variables = c( "MeanV", "meanbeta", "meanp_reported", "meanI0", "meanR0",  "theta_ss", "v", "beta", "I0" ),digits = 6, max_rows = 60)
 
-
-draws <- stan_out$draws()
-R0_samples <- as_draws_df(draws)[["R0"]]
-quantile(R0_samples, probs = c(0.025, 0.5, 0.975))#2.5% and 7.5% and mean 50%
 
 #----Model selction----
 log_lik_array <- stan_out$draws("log_lik", format = "matrix")
@@ -108,25 +108,7 @@ print(waic_result)
 stan_out$diagnostic_summary()#Check divergence
 
 
-####STORage 
-#saveRDS(stan_out, "stan_out_hetero_pN.rds")
-
-#summary_df <- as.data.frame(stan_out$summary())
-#write_xlsx(summary_df, "posterior_summary_hetero_pN.xlsx")
-
-#draws_df <- as_draws_df(stan_out)
-#write.csv(draws_df, "posterior_draws_hetero_pN.csv", row.names = FALSE)
-
-
-
-# Clean Prediction Plot
-library(tidybayes)
-library(stringr)
-library(purrr)
-library(dplyr)
-library(ggplot2)
-
-# Extract posterior draws
+# Extract posterior draws for prediction plot
 draws_df <- as_draws_df(stan_out$draws("pred_cases"))
 
 # Convert to long format

@@ -1,4 +1,4 @@
-//Model2_Estimating PN_Mansucrip_Febru p_reported estimated
+//Model2_Estimating Pi
 functions {
   array[] real sir(real t, array[] real y, array[] real theta,
                    array[] real x_r, array[] int x_i) {
@@ -7,9 +7,9 @@ functions {
     real R = y[3];
     real N = x_i[1];
     real beta = theta[1];
-    real pN = theta[2]; // silence here if simulation bc not estimating pN
+    real pN = theta[2]; 
 
-    // Use here if real data
+
     real dS_dt = -beta * I * (S / (pN * N));
     real dI_dt = beta * I * (S / (pN * N)) - 0.2 * I;
     real dR_dt = 0.2 * I;
@@ -30,7 +30,7 @@ data {
 
 transformed data {
   array[0] real x_r;
-   //vector[n_states] p_reported = rep_vector(0.001, n_states);  // FIXED at 0.001 FOR R
+   
 }
 
 parameters {
@@ -38,7 +38,7 @@ parameters {
   vector<lower=0>[n_states] beta;
   real<lower=0, upper=1> p_reported;           // still estimated globally
   vector<lower=0>[n_states] I0;      // initial infected (per-state), real-valued NEW
-  //vector<lower=0>[n_states] I0;//
+  
 }
 
 transformed parameters {
@@ -48,10 +48,10 @@ transformed parameters {
   real MeanpN;
   real meanp_reported;
   real meanbeta;
-  real meanI0; // add mean of I0 NE not needed since estimated
+  real meanI0; 
 
   for (s in 1:n_states) {
-    y0[s, 1] = pN[s]*N[s] - I0[s]; //NEW for manuscript 1
+    y0[s, 1] = pN[s]*N[s] - I0[s]; 
     y0[s, 2] = I0[s];//b c fixed
     y0[s, 3] = 0;
   }
@@ -75,7 +75,7 @@ transformed parameters {
   MeanpN = sum(pN) / n_states;
   meanp_reported = p_reported;
   meanbeta = sum(beta) / n_states;
-  meanI0 = sum(I0) / n_states;  //now estimating I0 
+  meanI0 = sum(I0) / n_states;  
 }
 
 model {
