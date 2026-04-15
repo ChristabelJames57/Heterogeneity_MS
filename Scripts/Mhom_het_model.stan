@@ -1,5 +1,5 @@
-  ////with N=PN*N to ascertain variation N=N*PN THE Mhom-het model
- functions {  //// with N = pN * N
+  ////Mhom-het model stan
+ functions {
   array[] real sir(
     real t,
     array[] real y,
