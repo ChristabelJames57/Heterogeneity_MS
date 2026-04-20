@@ -93,9 +93,8 @@ plot <- ggplot(cases_by_state_filtered, aes(x = Date, y = Case_Count)) +
   )
 
 print(plot)
-ggsave("Output/Figure/Figure_1.png", width = 7, height = 5,dpi = 1000, bg="white")#check for dimension
+ggsave("Output/Figure/Figure_1.pdf", width = 7, height = 5, bg = "white")
 #END Figure 1
-
 
 # Figure_2 MAP OF SELECTED STATES ######
 # Load the shapefile using sf
@@ -128,8 +127,7 @@ ggplot(nigeria_states) +
   labs(title = "",
        fill = "State Category")
 
-ggsave("Output/Figure/Figure_2.png", width = 7, height = 5, dpi = 1000, bg = "white")# look for this title
-
+ggsave("Output/Figure/Figure_2.pdf", width = 7, height = 5, bg = "white")
 ###END Fig.2 
 
 
@@ -210,7 +208,7 @@ ggplot(df_R0, aes(x = p_r, y = MeanR0, colour = v, group = v)) +
   )
 
 # Save
-ggsave("Output/Figure/Figure_3.png",width = 7,height = 5,dpi = 1000, bg = "white")
+ggsave("Output/Figure/Figure_3.pdf", width = 7, height = 5, bg = "white")
 #end Figure_3
 
 
@@ -295,8 +293,7 @@ ggplot(df, aes(x = p_r, y = Meanp_r, colour = v)) +
     )
   )
 # Save
-ggsave("Output/Figure/Figure_4.png",width = 7,height = 5,dpi = 1000, bg = "white")
-
+ggsave("Output/Figure/Figure_4.pdf", width = 7, height = 5, bg = "white")
 
 ##end Figue_4 
 
@@ -360,6 +357,5 @@ ggplot(df, aes(x = p_r, y = MeanV, color = v_true, group = v_true)) +
     )
   )
 # Save
-ggsave("Output/Figure/Figure_5.png",width = 7,height = 5,dpi = 1000, bg = "white")
-
+ggsave("Output/Figure/Figure_5.pdf", width = 7, height = 5, bg = "white")
 #end Figure_5.
