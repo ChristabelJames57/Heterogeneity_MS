@@ -205,7 +205,7 @@ state_labels <- setNames(selected_states, c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
 ggplot(plot_df, aes(x = day)) +
   geom_point(aes(y = Observed), color = "black", size = 0.8) +
   geom_line(aes(y = median), color = "blue", size = 1) +
-  facet_wrap(~state, labeller = as_labeller(state_labels), scales = "free_y") +
+  facet_wrap(~state, labeller = as_labeller(state_labels), scales = "free_y") +#FORlabeling states
   labs(x = "Day", y = "Cases", title = "Observed vs Predicted Cases by State") +
   theme_minimal(base_size = 12)#end
  

@@ -6,17 +6,28 @@ library(scales)
 library(patchwork)
 rm(list = ls()) # Clear workspace
 
-#Figure_6 reported versus predicted for all three models##### 
+# Figure_6 reported versus predicted for all three models #####
 
 draws_df_m11 <- readRDS("./Output/draws_model11_heterogeneity.rds")
 draws_df_m33 <- readRDS("./Output/draws_model33_noheterogeneity.rds")
 draws_df_m44 <- readRDS("./Output/draws_model44_PNheterogeneity.rds")
 
-t_last          <- readRDS("./Output/t_last.rds")
 cases_matrix    <- readRDS("./Output/cases_matrix.rds")
 selected_states <- readRDS("./Output/selected_states.rds")
 
-#TO SUMMARIZE REUSEABLE
+#   t_last 
+end_days <- c(
+  Ondo = 152, Edo = 189, Osun = 127, Oyo = 174,
+  Kano = 144, Kwara = 154, Delta = 140,
+  Ebonyi = 119, Enugu = 128, Kaduna = 200, Bayelsa = 89,
+  Gombe = 143, Rivers = 157,
+  Bauchi = 129, `Cross River` = 89
+)
+
+t_last <- end_days[selected_states]  # correct order
+
+# SUMMARISE FUNCTION
+
 summarise_predictions <- function(draws_df, t_last, model_name) {
   
   n_states <- length(t_last)
@@ -38,7 +49,7 @@ summarise_predictions <- function(draws_df, t_last, model_name) {
       day   = as.integer(str_extract(var, "(?<=,)[0-9]+"))
     ) %>%
     left_join(t_last_df, by = "state") %>%
-    filter(day <= t_last[state]) %>%
+    filter(day <= t_last) %>%  
     group_by(state, day) %>%
     summarise(
       median = median(value),
@@ -49,48 +60,38 @@ summarise_predictions <- function(draws_df, t_last, model_name) {
     mutate(model = model_name)
 }
 
-##SUMMARIZE ALL THREE MODELS
+# SUMMARISE ALL MODELS
 
-summary_m11 <- summarise_predictions(
-  draws_df_m11, 
-  t_last, 
-  model_name = "Heterogeneity"
-)
-
-summary_m33 <- summarise_predictions(
-  draws_df_m33, 
-  t_last, 
-  model_name = "No heterogeneity"
-)
-
-summary_m44 <- summarise_predictions(
-  draws_df_m44, 
-  t_last, 
-  model_name = "Mhom-het"
-)
+summary_m11 <- summarise_predictions(draws_df_m11, t_last, "Heterogeneity")
+summary_m33 <- summarise_predictions(draws_df_m33, t_last, "No heterogeneity")
+summary_m44 <- summarise_predictions(draws_df_m44, t_last, "Mhom-het")
 
 summary_all <- bind_rows(summary_m11, summary_m33, summary_m44)
 
-##PREPARE OBSERVED DATA SAHRED BY BOTH MODEL
+# OBSERVED DATA (FIXED)
+
 cases_subset <- as.matrix(cases_matrix[1:max(t_last), ])
 
 obs_df <- purrr::map_dfr(1:length(t_last), function(s) {
   tibble(
     state = s,
-    day = 1:(t_last[s] - 1),
-    Observed = cases_subset[1:(t_last[s] - 1), s]
+    day = 1:t_last[s],  
+    Observed = cases_subset[1:t_last[s], s]
   )
 })
 
-##MERGE PLOT PREDICTIONS
+# MERGE
+
 plot_df <- summary_all %>%
   left_join(obs_df, by = c("state", "day"))
 
-#SINGLE PANEL FOR ALLTHREE
+# Labels
 state_labels <- setNames(
   selected_states,
   as.character(1:length(selected_states))
 )
+
+# PLOT
 
 ggplot(plot_df, aes(x = day)) +
   geom_point(
@@ -99,8 +100,7 @@ ggplot(plot_df, aes(x = day)) +
     size = 0.8
   ) +
   geom_line(
-    #aes(y = median, color = model),
-    aes(y = median, color = model,linetype = model),#add line type to show model since overlapping
+    aes(y = median, color = model, linetype = model),
     linewidth = 1
   ) +
   
@@ -111,40 +111,36 @@ ggplot(plot_df, aes(x = day)) +
       "Mhom-het"          = "darkgreen"
     )
   ) +
-  
-  scale_x_continuous(
-    limits = c(1, max(t_last)),
-    expand = expansion(mult = c(0.02, 0.02))
-  ) +
   facet_wrap(
     ~state,
     labeller = as_labeller(state_labels),
-    scales = "free_y"
+    scales = "free" 
   ) +
+  
   labs(
     x = "Day",
-    #y = "Observed cases",
     y = "Reported cases",
     color = "Model"
   ) +
+  
   theme_minimal(base_size = 14) +
   theme(
-    legend.position = "none",#IF U WANT CHANGE NON TO RIGHT
+    legend.position = "none",
     axis.title = element_text(size = 16),
     axis.text  = element_text(size = 13),
-    #axis
     axis.line = element_line(color = "black", linewidth = 0.8),
     axis.ticks = element_line(color = "black"),
     axis.ticks.length = unit(0.25, "cm"),
     panel.grid = element_blank(),
-    strip.text = element_blank(),
+    strip.text = element_text(size = 12, face = "bold"),
     strip.background = element_blank(),
     plot.margin = margin(10, 10, 10, 10)
   )
-# Save
-ggsave("Output/Figure/Figure_6.png",width = 12,height = 10,dpi = 1000, bg = "white")
 
-#end Figure_6.
+# Save
+ggsave("Output/Figure/Figure_6.pdf",
+       width = 12, height = 10,
+       units = "in", bg = "white")
 
 
 #Figure_7 Deterministic outbreak comparison using the mean states #####
@@ -316,7 +312,7 @@ ggplot(df_plot,
     legend.position = "right"
   )
 # Save
-ggsave("Output/Figure/Figure_7.png",width = 7,height = 5,dpi = 1000, bg = "white")
+ggsave("Output/Figure/Figure_7.pdf", width = 7, height = 5, bg = "white")
 # END Figure_7
 
 
@@ -390,8 +386,6 @@ p_inset <- ggplot(df_gamma, aes(x = x, y = y)) +
 g_inset <- ggplotGrob(p_inset)
 
 # == FINAL PLOT WITH INSET
-
-
 p_final <- ggplot(hit_df, aes(
   x = v,
   y = HIT,
@@ -426,23 +420,17 @@ p_final <- ggplot(hit_df, aes(
     plot.margin = margin(10, 10, 10, 10)
   ) +
   
-  # Inset ## to merge both figures
+  # Inset
   annotation_custom(
     grob = g_inset,
     xmin = 2.5, xmax = 3.9,
-    ymin = 0.08, ymax = 0.5
-  ) +
-  
-  # labeLS 
-  annotate("text", x = 0.35, y = 0.36, label = "A", size = 6)+ #moves label a slightly up
-  annotate("text", x = 2.6, y = 0.48, label = "B", size = 5)
-
+    ymin= 0.09, ymax= 0.33
+  )
 
 p_final
 
 # Save
-ggsave("Output/Figure/Figure_8.png",width = 7,height = 5,dpi = 1000, bg = "white")
-
+ggsave("Output/Figure/Figure_8.pdf", width = 7, height = 5, bg = "white")
 #end figure_8
 
 
@@ -662,8 +650,7 @@ p2 <- ggplot(df_all, aes(x = time, y = Rt, colour = model)) +
   )
 p1 / p2
 # Save
-ggsave("Output/Figure/Figure_9.png",width = 7,height = 5,dpi = 1000, bg = "white")
-
+ggsave("Output/Figure/Figure_9.pdf", width = 7, height = 5, bg = "white")
 #end Figure_9
 
 
