@@ -50,7 +50,7 @@ rsconnect/
 .positai
 #files larger than 100mb
 Output/draws_Mhet.rds
-Output/stan_out_Mhet_McMc.rds
 Output/stan_out_Mhet_prior.rds
 Output/draws_model.rds
 Output/PosteriorSamples.csv
+Output/stan_out_Mhet_McMC.rds
